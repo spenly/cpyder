@@ -15,4 +15,4 @@ Example
 
 > code: https://github.com/spenly/cpyder/blob/master/example/demo.py
 
-> data: https://github.com/spenly/cpyder/blob/master/example/data/mybb_cat.py
+> data: https://github.com/spenly/cpyder/blob/master/example/data/mybb_cat.csv
