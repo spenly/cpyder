@@ -3,6 +3,7 @@ cpyder
 
 It is simple but powerful crawler.
 
+python3 only
 
 Usage
 ===
