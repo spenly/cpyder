@@ -17,44 +17,11 @@ def url_encode(words):
     return urllib.urlencode({"value": words})[6:]
 
 
-def get_charset(headers):
-    """
-    get response encoding code by response header
-    :param headers: response http header object
-    :return: string encoding name
-    """
-    charset = "utf8"
-    if "Content-Type" in headers:
-        scs = str(headers["Content-Type"]).split(";")
-        for s in scs:
-            s = s.strip().lower().replace("-", '')
-            if s.startswith("charset="):
-                charset = s[8:]
-                break
-    return charset
-
-
-def to_str(text, encoding=None):
-    """
-    trans any string or unicode object to string with UTF8
-    :param text:
-    :param encoding: old encoding if you know
-    :return: string with utf8
-    """
-    if encoding:
-        return text.decode(encoding)
-    if not isinstance(text, str):
-        try:
-            text = text.decode("utf8")
-        except UnicodeDecodeError:
-            text = text.decode("gb2312")
-    return text
-
-
 class HttpWorker:
     """
     one simple utility based on requests
     """
+
     def __init__(self, time_out=30, error_sleep=10):
         """
         init
@@ -89,19 +56,16 @@ class HttpWorker:
 
     def get(self, url, try_times=0, **kwargs):
         """
-
-        :param url: 链接地址
-        :param try_times: 已经重试次数, 如果请求失败, 自动尝试三次
-        :param headers: 自定义请求头
-        :return: 请求的内容
+        send GET request
+        :param url: url
+        :param try_times: tried times after failing
+        :return: text
         """
         try:
             url = url.strip()
             print_msg("request[GET]: " + url)
             r = self.session.get(url, timeout=self.time_out, proxies=self.proxy, **kwargs)
-            re_text = r.content
-            charset = get_charset(r.headers)
-            re_text = to_str(re_text, charset)
+            re_text = r.text
             return re_text
         except Exception as e:
             time.sleep(self.error_sleep_time)
@@ -113,22 +77,18 @@ class HttpWorker:
             else:
                 return ''
 
-    def post(self, url, post, try_times=0, **kwargs):
+    def post(self, url, try_times=0, **kwargs):
         """
-        构造post请求
-        :param url: 链接地址
-        :param post: post 数据, dict对象
-        :param try_times: 已经重试次数, 如果请求失败, 自动尝试三次
-        :param headers: 自定义请求头
-        :return: 请求的内容
+        send POST request
+        :param url: url
+        :param try_times: tried times after failing
+        :return: text
         """
         try:
             url = url.strip()
             print_msg("Request[POST]: " + url)
-            r = self.session.post(url, data=post, timeout=self.time_out, proxies=self.proxy, **kwargs)
-            re_text = r.content
-            charset = get_charset(r.headers)
-            re_text = to_str(re_text, charset)
+            r = self.session.post(url, timeout=self.time_out, proxies=self.proxy, **kwargs)
+            re_text = r.text
             return re_text
         except Exception as e:
             time.sleep(self.error_sleep_time)
@@ -136,22 +96,23 @@ class HttpWorker:
             try_times += 1
             if try_times < 3:
                 print_msg("Retrying ...")
-                return self.post(url, post, try_times, **kwargs)
+                return self.post(url, try_times, **kwargs)
             else:
                 return ''
 
-    def download(self, url, post=None, try_times=0, **kwargs):
+    def download(self, url, method="GET", try_times=0, **kwargs):
         """
-        构造文件下载请求
-        :param url: 请求链接
-        :param post: GET 方式为 None, Post 为 POST 数据, 默认为 None (GET)
-        :param try_times: 已经重试次数, 如果请求失败, 自动尝试三次
-        :return: 二进制对象
+        download file
+        :param url: url
+        :param method: GET or POST, default GET
+        :param try_times: tried times after failing
+        :return: content
         """
         try:
+            post = method.upper() == "POST"
             print_msg("Download [ %s ]:" % (post and "POST" or "GET") + url)
             if post:
-                res = self.session.post(url, data=post, **kwargs).content
+                res = self.session.post(url, **kwargs).content
             else:
                 res = self.session.get(url, timeout=self.time_out, **kwargs).content
             return res
@@ -161,6 +122,6 @@ class HttpWorker:
             try_times += 1
             if try_times < 3:
                 print_msg("Retrying ...")
-                return self.download(url, post, try_times)
+                return self.download(url, method, try_times, **kwargs)
             else:
                 return None
