@@ -11,7 +11,7 @@ from setuptools import setup, find_packages
 def setup_package():
     setup(
         name='cpyder',
-        version="0.0.1",
+        version="0.0.2",
         description='one simple but powerful crawler!',
         url="https://github.com/spenly/cpyder",
         long_description="one simple but powerful crawler!",
